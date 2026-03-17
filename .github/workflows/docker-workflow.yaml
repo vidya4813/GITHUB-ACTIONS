@@ -1,0 +1,74 @@
+name: docker-ci-cd-workflow
+
+on:
+  push:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 10 * * *'
+
+env:
+  IMAGE_NAME: simple-github-actions-app
+
+jobs:
+
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: checkout repository
+        uses: actions/checkout@v4
+
+      - name: show environment variable
+        run: echo "Image name is $IMAGE_NAME"
+
+      - name: create build file
+        run: echo "build completed" > build.txt
+
+      - name: upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-file
+          path: build.txt
+
+      - name: cache docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.docker-cache
+          key: docker-${{ runner.os }}-${{ github.sha }}
+          restore-keys: |
+            docker-${{ runner.os }}
+
+      - name: docker login
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      - name: build docker image
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/$IMAGE_NAME:latest .
+
+      - name: push docker image
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/$IMAGE_NAME:latest
+
+
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: build-file
+
+      - name: display artifact
+        run: cat build.txt
+
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: deployment message
+        run: echo "Application deployed successfully"
