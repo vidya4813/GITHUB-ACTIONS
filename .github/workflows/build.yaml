@@ -1,0 +1,20 @@
+name: my-workflow
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: print sysdate
+        run: date
+
+      - name: displays the list of files
+        run: ls -l
+
+      - name: print the name of the os
+        run: uname -a
+
+      - name: print message
+        run: echo "github-actions running successfully"
