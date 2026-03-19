@@ -3,9 +3,6 @@ name: docker-ci-cd-workflow
 on:
   push:
   workflow_dispatch:
-  schedule:
-    - cron: '0 10 * * *'
-
 env:
   IMAGE_NAME: simple-github-actions-app
 
